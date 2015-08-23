@@ -1,0 +1,302 @@
+---
+title: "Doing without Texts: Sapiro on Translation"
+date: 2015-08-23
+layout: post
+categories: [sociological-bandwagon,dh]
+output:
+    md_document:
+        variant: markdown
+---
+
+```{r setup, cache=F, include=F}
+library(knitr)
+# attempt to set a reasonable code output textwidth
+options(width=44)
+opts_knit$set(width=44)
+opts_chunk$set(
+    comment=NA, # no comment chars decorating code output
+    collapse=T, # multiple statements and output collapsed together
+    # dev="tikz", # TikZ graphs: nice but slow
+    # fig.width=4.5, fig.height=2.75,   # beamer cards are 128 mm x 96 mm
+    # size ='footnotesize',             # gets zoomed up to something reasonable
+    dev.args=list(pointsize=9),
+    message=F, warning=F,             # quit your chatter, R
+    error=T,    # stop on error: can get annoying
+    echo=F,     # hide chunk code by default
+    cache=F)
+library(igraph)
+library(readr)
+library(networkD3)
+library(stringr)
+library(dplyr)
+knit_hooks$set(igraph=function(before, options, envir) {
+    if (before) {
+        igraph.options(vertex.label.family="Helvetica",
+                       vertex.label.color=rgb(0, 0, 0, alpha=0.8),
+                       vertex.label.size=0.5,
+                       vertex.frame.color=NA,
+                       vertex.size=3,
+                       vertex.palette=adjustcolor(categorical_pal(7), alpha=0.2),
+                       plot.margin=-0.6)
+    }
+})
+
+set.seed(271828)
+```
+
+```{r load-scripts}
+source("extract_tsv.R")
+```
+
+```{r forcenetwork-settings}
+net <- function (e, v) {
+    forceNetwork(Links=e, Nodes=v,
+                 Source="source", Target="target", Value="weight",
+                 NodeID="name", Group="group",
+                 zoom=T, opacityNoHover=1,
+                 fontFamily="sans-serif")
+}
+```
+
+```{r get-bib}
+get_bib <- function (f) {
+    if (!file.exists(f)) {
+        data_dir <- file.path("data",
+                              str_replace(basename(f), "\\.tsv", ""))
+        extract_frame(data_dir) %>% 
+            write.table(sep="\t", quote=F, row.names=F, file=f)
+    }
+    read_tsv(f)
+}
+
+bib <- get_bib("generated/frUSA1990-2003lit.tsv")
+# hand-correction: problem with original data
+bib[bib$id == 739, "publisher"] <- "Atlantean Press"
+bib[bib$id == 739, "pub_place"] <- "Lafayette, COLO"
+
+bib2 <- get_bib("generated/frUSA2004-2008lit.tsv")
+bib <- bib %>% bind_rows(bib2)
+```
+
+
+
+If we want to do sociology of literature, let's get away from texts for a bit.
+
+One of the most promising things about the current interest in quantitative methods for literary study is that it offers us some alternatives to *reading* as a method. There are important questions about literature---above all, about literature as a social and historical *system*---that cannot be answered with the tools of the expert textual interpreter. Such questions are better answered, I believe, in closer collaboration with our disciplinary kindred in the social sciences.
+
+Thanks to a [new special issue](http://cus.sagepub.com.proxy/content/9/3.toc) of *Cultural Sociology* focused on literature, we have a chance to look at some concerete examples of what sociological approaches to literary problems currently look like. In this post I'll discuss the excellent essay there by Gisèle Sapiro, [Translation and Symbolic Capital in the Era of Globalization: French Literature in the United States](http://doi.org/10.1177/1749975515584080). Sapiro, whose work I have been following for a while, works in the tradition of the sociology of fields, and has written on both twentieth-century literary history and contemporary world literature. This latest essay is particularly fun to think with, because I have my greedy paws on some of the same data Sapiro uses, so it will be possible to look in some detail at the sort of evidence and the sort of analysis her approach entails---and, perhaps, to think how to extend it.
+
+<!-- more -->
+\
+
+
+Sapiro's essay is about translation and the international circulation of literature. She seeks to explain the conditions under which French-language literature has been recently translated in the USA. How are we to explain the perception in U.S. publishing circles that French literature is dead? (Tell that to my high-school French teachers, who took us right to the cutting edge with...Sartre...and...Camus...and...François Mauriac. Mauriac, I tell you, in the name of the Flying Spaghetti Monster.)
+
+Sapiro adopts a perspective similar to that of Pascale Casanova in *The World Republic of Letters*: her starting premise is that literary visibility and recognition are unequally distributed geographically. The literary system has a "core" and a "periphery," by analogy with the capitalist world economy. For Casanova, Paris is the capital of the "world republic," still playing the major role in consecrating authors for cosmopolitan readers across the world; but for Sapiro New York is the capital of a "dominant publishing field" (325) with the power to arbitrate the standing of other "national literatures" on the global stage.
+
+The world system is itself mostly divided into national subsystems, and, as in the global system, each subsystem is unequal. At the national level we are to recognize the dynamic of what Bourdieu, whom Sapiro follows quite closely here, called the field of cultural production: a polarized structure, where some agents pursue specifically literary renown  or symbolic capital, others pursue commercial success or economic capital, and the two tendencies are generally opposed. We shall have to return to this Bourdieuean assumption, since Sapiro's own analysis adds some nuance to it.
+
+Now Casanova's study is a qualitative and theoretical text, but Sapiro seeks to put this understanding of world literature on an "empirical" footing (322). How does one operationalize the hypothesis of the cultural field? In Bourdieu, the principal empirical technique was an exploratory method called [multiple correspondence analysis](http://en.wikipedia.org/wiki/Multiple_correspondence_analysis), essentially a way of summarizing variation in many categorical variables in a two-dimensional space. (I'll say more about that another time, as this technique is still being used in very interesting ways in the sociology of culture.) Sapiro's approach is less esoteric. I want to emphasize the characteristics of her method because they point in very different directions from the lines "distant reading" has tended to follow so far---and, [I think](http://andrewgoldstone.com/blog/2015/08/08/distant/), more productive ones.
+
+First: there are no interpretations of literary texts in her essay. There are no quotations from literary titles; there are, however, numerous excerpts from interviews with people in the publishing industry.  Whereas literary scholars with a quantitative bent, myself included, have tended to construct text corpora and think about their properties as the dependent variables of interest,
+Sapiro makes no attempt to obtain or analyze the texts of recently translated French literature. She does not seek to characterize the corpus of translations "in itself."
+This is the point at which one might say, Is this the difference between the sociologist and the literary scholar? But I do not think so: all of Sapiro's questions are literary-historical questions. Her concern is valuation, circulation, and meaning-making in the literary domain. And Sapiro's method allows her to examine the linkages between literary activity and the political and economic domains---linkages that matter centrally to literary scholarship.
+
+To see how Sapiro makes this work, we can observe that the essay does, after all, have some interpretation of literature after all. Consider Sapiro's discussion of American independent publishers:
+
+
+> The oldest of the 16 firms set up before 1980, and which stayed independent 
+> during the fusion-acquisition period, is New Directions, founded in 1936, which concentrates on the reprint of classics from their backlist, all the while making a cautious opening to a more commercial upmarket contemporary author: Amélie Nothomb. By contrast, Burning Deck, set up in 1961 by Keith and Rosemarie Waldrop, and located in Providence, Rhode Island, specializes in poetry, an upmarket non-commercial genre, and has published innovative authors such as Pascal Quignard in the French series launched in 1990. (336)
+
+The interpretation here, at the level of authors rather than texts (I really could not find any remarks about single texts), *classifies* writers: Nothomb is "commercial upmarket"; Quignard is "innovative." Now the point about these categories is that they are more or less "native" to publishing ("upmarket" is a term Sapiro has taken from her interviewees," "innovative" is immediately recognizable to me as a shibboleth of "advanced" cosmopolitan publishing^[...and the Modernist Studies Association.]). At the same time, they need not refer to "intrinsic" textual qualities: is Quignard *really* innovative? Who knows? It suffices that he is perceived to be within the field that translates him. And it suffices for the analysis of the *system* to be able to work with the more or less stable broad classifications that operate within it.^[I have some reservations about this: we shouldn't have to assume that the commercial/upmarket/innovative system is stable across the field. It bears the stamp of the consecrated, "purist" pole of the field, and our analysis should not be too quick to accept the hegemony of the purists.]
+To this system Sapiro has to add two more categories of non-contemporary writers, what she designates "modern classics" (like my high-school French teachers' choices) and then classics proper (Montaigne, Balzac).
+
+Now we have one dimension of variation, the classifications of the authors translated. Against this Sapiro poses another variable, the category of the publishers. This is more straightforward, since she uses an organizational variable: presses are either imprints in large conglomerates, small independents, or university presses. Sapiro reports that the US presses publishing translations from French fairly consistently are more or less evenly split among these categories in terms of their share of all translated titles. But they do not all publish the same *class* of texts. The key empirical demonstration of Sapiro's analysis, it seems to me, is thus her Table 5 (335), which shows that there are proportionally more independent publishers with lists dominated by contemporary writing than imprints of big publishers or university presses.[^stat]
+
+
+```{r}
+t5 <- prop.test(c(16, 7, 6), c(27, 23, 13)) # Table 5, rows 2 and 4
+```
+
+[^stat]: Since in my [last post on this theme](http://andrewgoldstone.com/blog/2015/08/08/distant/) I said we ought to have more statistical rigor in quantitative literary studies, I should say that the inspection of this table could be enhanced with a statistical evaluation. The numbers are quite small here, small enough that---if I have used my magic R statistics box correctly---one cannot reject the hypothesis that the publisher type makes no difference to the chance of whether the publisher has a majority-contemporary list or not, χ^2(`r t5$parameter`) = `r t5$statistic`, p = `r t5$p.value` (ignoring the "missing information" column of her table). But this indicates only that some more refinement to the choice of indicators is called for; I am not all questioning a multiply-supported conclusion about the structure of the field. To go further we would have to repeat Sapiro's task of hand-classifying the organizational-control of each of the 69 publishers in question and the classic, modern-classic, or contemporary status of each of their titles. She has not made her data available, as far as I know.
+
+Thus, it is not simply a matter of counting how many titles translated from French are published in the US and lamenting how small they are, proportionally, especially by comparison with the reciprocal figure. (Still, as Sapiro notes, French continues to top the list of source languages for literary translations in the US almost, both cumulatively and every year, as you can see using the [*Index Translationum*](http://www.unesco.org/xtrans/bsstatexp.aspx)'s statistical summary functions.) If we stop there, our only explanatory recourse will be a lazily "cultural" story about US insularity and monolingualism. But what really matters for Sapiro are the *channels* through which translations enter the US literary field. What the *bivariate* analysis supports is Sapiro's argument that translations from French contemporary literature are indeed being continuously produced, but only at the *small-scale* pole of the field. Large presses, even under "prestige" imprints, gravitate towards already-consecrated classics and modern classics.
+
+This conservative strategy reflects the cautiousness of large publishers about the profitability of translations. There is a "self-fulfilling prophecy," says Sapiro, whereby publishers act so as to confirm their own belief in the market unviability of translations. Yet Sapiro's interviews reveal an interesting further factor, which is that acquiring editors at the big publishers simply do not have the linguistic or cultural competence to seek out foreign literatures. Here I would suggest that another piece of the puzzle is the role played by the gradual destruction of foreign language study in the secondary and higher education systems in the US. John Thompson [has shown](http://arcade.stanford.edu/blogs/distant-cousins-literary-studies-and-thompsons-merchants-culture) that large trade publishers do take risks all the time in pursuit of the "big book," and that many big publishers continue to maintain significant interests not just in economic but in symbolic profits ("quality"). But the kinds of elective affinity that would guide an editor to acquiring a foreign title become impossible when that editor simply cannot read beyond English. 
+
+Sapiro does not discuss another dimension of the field, namely that small-scale and non-profit operators are probably better-positioned and more inclined to take advantage of French [state subventions](http://frenchculture.org/books/grants-and-programs/publishing-grants-prizes/publishers) for translation. Whereas the big publishers, always (as Thompson says) "minding the gap" between revenues and profitability goals, cannot do much with the sorts of grants the Ministry of Culture gives, for a small press such support might be decisive. The 2013 list of [Hemingway grant recipients](http://frenchculture.org/sites/default/files/hemingwaygrant2013.pdf), for example, consists almost entirely of small independent presses and university presses (Polity, however, is a medium-sized rather than small organization). Sapiro: "translating literary works is a mode of accumulating symbolic capital for newcomers in the publishing field" (335).
+
+This then is an empirical hypothesis: like the overall publishing field, translations from French are polarized between large and small scale producers. Furthermore, at each pole the *kinds of writer* published are consistent, and, as Bourdieu would lead us to expect, the degree of investment in symbolic as opposed to economic value is closely linked to the *age* of the writer translated. Youth or contemporaneity is found at the small-scale pole, age and the "classic" at the large-scale. This is the supposition reinforced by Sapiro's table 5.
+
+It has a further implication for operationalizing the idea of the field, however. It means that we can approximate the field position of publishers by *clustering them on author types*.
+
+Or, if there are enough prolifically translated authors to go on, we should be able to accomplish the clustering on authors themselves. And this is why Sapiro turns to a network analysis. There should be a [*duality*](http://www.jstor.org/stable/2576011) of translated authors and their publishers: the affinities among the former are coupled to the affinities among the latter. (This fact is also the basis of Natalie Houston's ongoing [work on the field of Victorian poetry publishing](http://muse.jhu.edu/journals/victorian_studies/v056/56.3.houston.html).) To see this empirically, Sapiro constructs the network of publishers, where ties represent translated authors shared between them (her fig. 3). And here comes the fun part, because her source here is UNESCO's *Index Translationum* aggregate bibliography, and that bibliography is available [online](http://www.unesco.org/xtrans/). It is not too difficult to automate the collection of a series of search results from this bibliography.[^code]
+
+[^code]: I'm a little nervous about circulating my code to do this, since I don't want to make it too easy for careless people to overload their server (the built-in statistical aggregator asks you not to specify two variables "unless you have a real need," so I sense UNESCO may not be operating an enormous server farm underneath the East Side). Anyway, once you have the bibliographic results, a little data-wrangling and you can derive the affiliation matrix of translated authors and publishers. I have placed the R script I used, together with the the derived TSV data file and the R markdown for this blog post, [on github](http://github.com/agoldst/unesco-wrangling). 
+
+
+```{r year-filter}
+year_min <- 1990
+year_max <- 2003
+bib_filtered <- bib %>%
+    select(year, author, publisher) %>%
+    filter(!is.na(author), !is.na(publisher)) %>% 
+    filter(year_min <= year, year <= year_max)
+```
+    
+```{r pub-threshold}
+pub_threshold <- 5
+
+bib_filtered <- bib_filtered %>%
+    group_by(publisher) %>%
+    filter(n() >= pub_threshold)
+```
+
+```{r drop-isolates}
+bib_filtered <- bib_filtered %>% 
+    group_by(author) %>%
+    filter(n_distinct(publisher) > 1)
+```
+
+To replicate Sapiro's figure (in part, more or less), we follow her note to restrict to 1990--2003 publications and to publishers that have published at least five translations. 
+Some publishers share no authors with any others: these are the isolates, and they are not part of the network analysis. Eliminating these leaves us
+ `r nrow(bib_filtered)` titles, `r n_distinct(bib_filtered$author)` authors and `r n_distinct(bib_filtered$publisher)` publishers. These are the publishers that have a relatively sustained interest in translations from French and some connection with other publishers via authors.
+
+```{r edge-frame}
+bib_filtered <- bib_filtered %>%
+    ungroup() %>%
+    mutate(sequential_id=1:n()) %>% 
+    group_by(sequential_id) %>%
+    do({
+        au <- str_split(.$author, ";;")[[1]]
+        pub <- str_split(.$publisher, ";;")[[1]]
+        data_frame(year=.$year,
+                   author=rep(au, times=length(pub)),
+                   publisher=rep(pub, each=length(au)))
+    })
+```
+
+```{r pub-graph}
+bib_g <- bib_filtered %>% ungroup() %>%
+    select(author, publisher, year) %>%
+    graph_from_data_frame(directed=F)
+
+V(bib_g)$type <- V(bib_g)$name %in% bib_filtered$publisher
+
+bib_g <- simplify(bib_g, edge.attr.comb="concat")
+pub_g <- bipartite_projection(bib_g, which="true")
+
+```
+
+Instead of transcribing Sapiro's coding of the organizational control and publication type of each press, I will use a clustering algorithm to label possible "communities" on the graph. Here is glimpse of the densely-connected "inner core" of this network:
+
+```{r pub-diagram-setup}
+pub_comm <- cluster_louvain(pub_g)
+```
+
+```{r pub-diagram, igraph=T, fig.cap="US publishers of translations from French, 1990–2003. Source: Index Translationum, UNESCO."}
+plot(pub_comm, pub_g, mark.groups=NULL,
+     edge.color=rgb(0, 0, 0, alpha=0.2))
+```
+
+```{r pub-save}
+pub_nodes <- igraph::as_data_frame(pub_g, what="vertices") %>%
+    mutate(group=as.vector(membership(pub_comm)) - 1)
+pub_edges <- as_edgelist(pub_g, names=F) %>%
+    as.data.frame() %>%
+    transmute(source=V1 - 1, target=V2 - 1) %>%
+    mutate(weight=E(pub_g)$weight)
+net(pub_edges, pub_nodes) %>%
+    saveNetwork(file="pub.html")
+```
+
+An interactive version of this diagram---which, unlike this, can actually be read---is available [on a separate page](http://andrewgoldstone.com/sapiro/pub.html). Click through in order to see the clustering tendencies more clearly (and to be able to search for publisher's using your browser's find-on-page function). I have also made an interactive diagram of the [publishers' network including titles up to 2008](http://andrewgoldstone.com/sapiro/pub08.html). 
+
+Sapiro does not display the dual of this graph, which is the co-publication network of authors. If publishers are indeed grouped by the kinds of writers they publish in translation, then those writer-types should cluster together in the co-publication network. Here is a glimpse of that network:
+
+```{r au-diagram-setup}
+au_g <- bipartite_projection(bib_g, which="false")
+au_comm <- cluster_louvain(au_g)
+```
+
+```{r au-diagram, igraph=T, fig.cap="French-language authors published in translation in the US, 1990–2003. Source: Index Translationum, UNESCO."}
+plot(au_comm, au_g, mark.groups=NULL,
+     edge.color=rgb(0, 0, 0, alpha=0.2))
+```
+
+```{r au-save}
+au_edges <- as_edgelist(au_g, names=F) %>%
+    as.data.frame() %>%
+    transmute(source=V1 - 1, target=V2 - 1) %>%
+    mutate(weight=E(au_g)$weight)
+au_nodes <- igraph::as_data_frame(au_g, what="vertices") %>%
+    mutate(group=as.vector(membership(au_comm)) - 1)
+net(au_edges, au_nodes) %>%
+    saveNetwork(file="au.html")
+```
+
+An interactive version of this diagram is available [on another separate page](http://andrewgoldstone.com/sapiro/au.html).
+
+In fact this dual graph lends itself more easily to interpretation, with two clearly defined clusters (I have again used automated community detection to highlight these), of "classics" and of "contemporaries." The role of broker between the clusters is played by high-betweenness-centrality writers: these include Queneau and Flaubert (rather pleasingly, since these are indeed great classic writers who also represent earlier stages of French literature's most radical avant-gardes).
+
+Sapiro does not spend much time on her network analysis, but what she does do  tends to fall back on a "reading" of the figure which, for me, provokes the same skepticism as the "readings" of data visualization so prolifically circulated in "DH."  I find hairball graphics very hard to read. The major fact that is salient in this graphic, the centrality of the University of Nebraska Press to the network,^[This centrality is not just graphical: this press has the highest degree and the highest betweenness centrality of any member of the network, trailed by Dover and Knopf. This can be verified using igraph's `betweenness` function.]
+is not straightforward to interpret: it doesn't correspond to its prestige in the field of translation but rather its prolific program of translations and its mixture of modern classics and contemporary writers, linking it to two other kinds of publishers. On the other hand the reprint factory we call Dover Publications is highly central through a conservative focus on classics (and the educational market). These two network "stars" are not homologous according to the rest of Sapiro's analysis.
+
+It is informative but strange to see the largest players in the field of publishing pushed, in general, to the network periphery, like Harper Collins and Random House (which both have a betweenness centrality of zero on the graph). But there is enough clutter and strange variation (Penguin is quite central) that eyeballing this graph and hoping for the structure of field starts to feel like an uneasy process, relying too much on ignoring what we don't want to see. The next quantitative step would be possible for someone with more training than I have: to ask, perhaps using [ERGMs](https://en.wikipedia.org/wiki/Exponential_random_graph_models), just how much network structure can be explained by the typology of publishers Sapiro proposes.
+
+Part of the problem, perhaps, is the choice to think in terms of *titles* rather than sales or status. When I drafted this post I noticed that the *Index* data continues into 2008. I wondered what had stopped Sapiro at 2003 (apart from incompleteness of the data when she did her own compilation; the *Index* lags). The remaining five years of data present some strange phenomena, however. If we count only titles, we find ourselves weighing quite heavily [Gareth Stevens](https://www.garethstevens.com/about) an educational book publisher which happens to have worked its way through some series of French children's books (publishing *Little Bees*, *Little Elephants*, *Little Foxes*, *Little Wolves*...).  But this is hardly the same kind of publishing as we thought we were discussing. And what does title production mean, anyway? Might we not be more interested in other forms of circulation, registered by sales, or consecration (in e.g. prizes)?
+
+But perhaps the network is more complexity than this analysis really requires, and I think Sapiro was perfectly justified in using the network for exploration only. Again the literary scholar might be seduced by the desire to "read," or over-read, the elaborated network, perhaps by emphasizing the nodes that are positioned unexpectedly. But Sapiro's answer to the question about the status of French literature did not, remember, really depend on nuanced claims about affinity. Rather, the empirical question was about the *distribution of publisher's strategies* over publisher control types.
+
+And for this, Sapiro turns to different kinds of evidence. She does not---and I think this is a lesson quantitative literary study needs to absorb---stop with the analysis of the bibliographic data on its own. The *Index Translationum* does indeed implicitly contain central facts about the sociology of translated texts. But even to make sense of that, it was necessary to adduce the classifications of authors and publishers. *And* to use, as an interpretive context, the framework of the broader American publishing field itself, characterized by the opposition between small- and large-scale producers, the domination of conglomerates seeking high margins and "big books," and so on. 
+
+I have left to the side a number of other threads in Sapiro's essay (the changing and diversified nature of French-language writers as represented by US translation; the extreme concentration in Paris of publishers of French source materials). I want to close instead by returning to the premise of a literary "world system."
+
+Sapiro revises Casanova (it seems to me) by granting to Anglo-American book production a central status in the literary world system. Since translations from French are far more marginal in the US and the UK than translations from English are in France, shouldn't the "core" be located at the main export-source of literary goods? But Sapiro herself notes a complication. What is exported from the US to France (and elsewhere) is, especially though not at all exclusively, the outputs of large-scale production: American bestsellers are translated and sold all over the world.^["American hegemony was extreme in cinema and in genres of large-scale production such as mystery and romantic novels, classified as ‘low-brow’ in cultural hierarchies" (324).]
+But what is imported to the US is typically "upmarket" or prestige production from French, driven by the affinities of small-scale US publishers for what seems authentic, innovative, unfairly neglected, and so on. If we pay attention to transfers of *symbolic* rather than economic capital, the core status of the US does not seem so obvious: the US does not have the power to impose judgments of value on the French market *about French texts*, precisely because it is the small-scale publishers who translate contemporary French writers. It is in fact remarkable that the golden names of US academic life still include an ever-expanding canon of French writers: I have flown the flag of Bourdieu, but there is a "[French Theorist](http://www.worldcat.org/oclc/190876075)" for every taste. Though the same does not hold for the highbrow novel, it still seems to me that the dominant-dominated model is awkward to apply to the pairing of the US and French in literature. The opposition between forms of capital may mean that this relation between two competing centers of world literary space is not fully explained by the economic power of American cultural industries.
+
+
+```{r to2008-diagram}
+f08 <- "pub08.html"
+if (!file.exists(f08)) {
+    bib08_filtered <- bib %>%
+        select(year, author, publisher) %>%
+        filter(!is.na(author), !is.na(publisher)) %>% 
+        group_by(publisher) %>%
+        filter(n() >= pub_threshold) %>% 
+        group_by(author) %>%
+        filter(n_distinct(publisher) > 1) %>% 
+        ungroup() %>%
+        mutate(sequential_id=1:n()) %>% 
+        group_by(sequential_id) %>%
+        do({
+            au <- str_split(.$author, ";;")[[1]]
+            pub <- str_split(.$publisher, ";;")[[1]]
+            data_frame(year=.$year,
+                       author=rep(au, times=length(pub)),
+                       publisher=rep(pub, each=length(au)))
+        }) %>% 
+        ungroup() %>%
+        select(author, publisher, year)
+
+    bib08_g <- bib08_filtered %>% 
+        graph_from_data_frame(directed=F)
+
+    V(bib08_g)$type <- V(bib08_g)$name %in% bib08_filtered$publisher
+
+    pub08_g <- bib08_g %>% simplify(edge.attr.comb="concat") %>% 
+        bipartite_projection(which="true")
+
+    pub08_edges <- as_edgelist(pub08_g, names=F) %>%
+        as.data.frame() %>%
+        transmute(source=V1 - 1, target=V2 - 1) %>%
+        mutate(weight=E(pub08_g)$weight)
+
+    pub08_comm <- cluster_louvain(pub08_g)
+    pub08_nodes <- igraph::as_data_frame(pub08_g, what="vertices") %>%
+        mutate(group=as.vector(membership(pub08_comm)) - 1)
+
+    net(pub08_edges, pub08_nodes) %>%
+        saveNetwork(file=f08)
+}
+```
